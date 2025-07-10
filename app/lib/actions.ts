@@ -6,9 +6,13 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { signIn } from "@/auth";
 import { AuthError } from "next-auth";
-import { error } from "console";
+// import { error } from "console";
 
-const sql = postgres(process.env.POSTGRES_URL!, { ssl: "require" });
+// const sql = postgres(process.env.POSTGRES_URL!, { ssl: "require" });
+
+function getSql() {
+  return postgres(process.env.POSTGRES_URL!, { ssl: "require" });
+}
 
 export async function authenticate(
   prevState: string | undefined,
@@ -80,6 +84,7 @@ export async function createInvoice(prevState: State, formData: FormData) {
 
   const amountInCents = amount * 100;
   const date = new Date().toISOString().split("T")[0];
+  const sql = getSql(); // create fresh connection
 
   try {
     await sql`
@@ -118,6 +123,7 @@ export async function updateInvoice(
   console.log(validatedFields, "DDDDDDDD");
   // Prepare data for insertion into the database
   const { customerId, amount, status } = validatedFields.data;
+  const sql = getSql(); // create fresh connection
 
   const amountInCents = amount * 100;
 
@@ -129,6 +135,7 @@ export async function updateInvoice(
       `;
   } catch (error) {
     // We'll log the error to the console for now
+    console.error("Error :", error);
     return { message: "Database Error: Failed to Update Invoice." };
   }
 
@@ -137,6 +144,7 @@ export async function updateInvoice(
 }
 
 export async function deleteInvoice(id: string) {
+  const sql = getSql(); // create fresh connection
   throw new Error("Failed to Delete Invoice");
   try {
     await sql`DELETE FROM invoices WHERE id = ${id}`;
